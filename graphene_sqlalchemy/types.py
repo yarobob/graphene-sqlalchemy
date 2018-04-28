@@ -89,7 +89,7 @@ class SQLAlchemyObjectTypeOptions(ObjectTypeOptions):
 class SQLAlchemyObjectType(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-                                    only_fields=(), exclude_fields=(), connection=None,
+                                    only_fields=(), exclude_fields=(), connection_class=Connection,
                                     use_connection=None, interfaces=(), id=None, _meta=None, **options):
         assert is_mapped_class(model), (
             'You need to pass a valid SQLAlchemy Model in '
@@ -111,10 +111,11 @@ class SQLAlchemyObjectType(ObjectType):
 
         if use_connection is None and interfaces:
             use_connection = any((issubclass(interface, Node) for interface in interfaces))
-
-        if use_connection and not connection:
+		
+        connection = None
+        if use_connection:
             # We create the connection automatically
-            connection = Connection.create_type('{}Connection'.format(cls.__name__), node=cls)
+            connection = connection_class.create_type('{}Connection'.format(cls.__name__), node=cls)
 
         if connection is not None:
             assert issubclass(connection, Connection), (
